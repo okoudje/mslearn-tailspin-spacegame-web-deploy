@@ -3,7 +3,7 @@ trigger:
 variables:
   buildConfiguration: 'Release'
 stages:
-  - stage: 'build'
+  - stage: 'Build'
     displayName: 'Build the web application'
     variables:     
       wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
@@ -60,3 +60,30 @@ stages:
 
         - publish: '$(Build.ArtifactStagingDirectory)'
           artifact: drop
+  - stage: 'Deploy'
+    displayName: 'Deploy the web application'
+    dependsOn: Build
+    jobs:
+      - deployment: DeployWeb
+        displayName: 'Deployment of Space Game web application'
+        pool:
+          vmImage: 'Ubuntu-18.04'
+        environment: 'dev'
+        variables:
+          - group : Release
+        strategy:
+         runOnce:
+           deploy:
+             steps:
+               - download: current
+                 artifact: drop
+               - task: AzureWebApp@1
+                 displayName: 'Azure App Service Deploy : WebSite' 
+                 inputs:
+                   appType: webAppLinux
+                   azureSubscription: 'Ressource Manager - Space Game'
+                   appName: '$(webAppName)'
+                   package: '$(Pipeline.Worspace)/drop/$(buildconfiguration)/*.zip'
+    
+    
+  
