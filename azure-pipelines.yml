@@ -83,7 +83,7 @@ stages:
                    appType: webAppLinux
                    azureSubscription: 'SpaceGameDemoServiceConnection'
                    appName: '$(webAppName)'
-                   package: '$(Pipeline.Worspace)/drop/$(buildconfiguration)/*.zip'
+                   package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     
     
   
