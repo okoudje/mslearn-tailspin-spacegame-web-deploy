@@ -81,7 +81,7 @@ stages:
                  displayName: 'Azure App Service Deploy : WebSite' 
                  inputs:
                    appType: webAppLinux
-                   azureSubscription: 'Ressource Manager - Space Game'
+                   azureSubscription: 'SpaceGameDemoServiceConnection'
                    appName: '$(webAppName)'
                    package: '$(Pipeline.Worspace)/drop/$(buildconfiguration)/*.zip'
     
