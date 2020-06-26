@@ -2,6 +2,7 @@ trigger:
 - '*'
 variables:
   buildConfiguration: 'Release'
+  releaseBranchName: 'release-pipeline-jy'
 stages:
   - stage: 'Build'
     displayName: 'Build the web application'
@@ -60,9 +61,10 @@ stages:
 
         - publish: '$(Build.ArtifactStagingDirectory)'
           artifact: drop
-  - stage: 'Deploy'
+  - stage: 'Dev'
     displayName: 'Deploy the web application'
     dependsOn: Build
+    condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
     jobs:
       - deployment: DeployWeb
         displayName: 'Deployment of Space Game web application'
@@ -81,9 +83,12 @@ stages:
                  displayName: 'Azure App Service Deploy : WebSite' 
                  inputs:
                    appType: webAppLinux
-                   azureSubscription: 'SpaceGameDemoServiceConnection'
-                   appName: '$(webAppName)'
+                   azureSubscription: 'Space-game-azurerm-connection'
+                   appName: '$(webAppNameDEV)'
                    package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     
+  # - stage: 'Test'
+  #   displayName: 'Deploy to the Test environment'
+  #   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))         
     
   
