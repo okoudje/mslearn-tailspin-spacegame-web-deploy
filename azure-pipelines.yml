@@ -87,7 +87,7 @@ stages:
                    appName: '$(webAppNameDEV)'
                    package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     
-  # - stage: 'Test'
+  # - stage: 'Test' jfjfj
   #   displayName: 'Deploy to the Test environment'
   #   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))         
     
