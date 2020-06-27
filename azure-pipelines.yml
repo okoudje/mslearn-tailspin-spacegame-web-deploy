@@ -3,6 +3,16 @@ trigger:
 variables:
   buildConfiguration: 'Release'
   releaseBranchName: 'release-pipeline-jy'
+
+  # Plannification d'un declenchement automatique de la chaine de Build pour un
+schedules:
+  - cron: '0 0 * * *'
+    displayName: Deploy every day at 0.0 AM GMT
+    branches:
+      include:
+        - release-pipeline-jy
+    always: false
+
 stages:
   - stage: 'Build'
     displayName: 'Build the web application'
@@ -86,7 +96,59 @@ stages:
                    azureSubscription: 'Space-game-azurerm-connection'
                    appName: '$(webAppNameDEV)'
                    package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
+  - stage: 'ASM'
+    displayName: 'Deploy the web application'
+    dependsOn: dev
+    # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
+    jobs:
+      - deployment: DeployWeb
+        displayName: 'Deployment of Space Game web application'
+        pool:
+          vmImage: 'Ubuntu-18.04'
+        environment: 'asm'
+        variables:
+          - group : Release
+        strategy:
+         runOnce:
+          deploy:
+            steps:
+              - download: current
+                artifact: drop
+              - task: AzureWebApp@1
+                displayName: 'Azure App Service Deploy : WebSite' 
+                inputs:
+                  appType: webAppLinux
+                  azureSubscription: 'Space-game-azurerm-connection'
+                  appName: '$(webAppNameASM)'
+                  package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     
+  - stage: 'INT'
+    displayName: 'Deploy the web application'
+    dependsOn: asm
+  # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
+    jobs:
+    - deployment: DeployWeb
+      displayName: 'Deployment of Space Game web application'
+      pool:
+        vmImage: 'Ubuntu-18.04'
+      environment: 'int'
+      variables:
+        - group : Release
+      strategy:
+        runOnce:
+         deploy:
+          steps:
+            - download: current
+              artifact: drop
+            - task: AzureWebApp@1
+              displayName: 'Azure App Service Deploy : WebSite' 
+              inputs:
+                appType: webAppLinux
+                azureSubscription: 'Space-game-azurerm-connection'
+                appName: '$(webAppNameINT)'
+                package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
+
+
   # - stage: 'Test' jfjfj
   #   displayName: 'Deploy to the Test environment'
   #   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))         
