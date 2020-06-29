@@ -210,7 +210,7 @@ stages:
     - stage: 'Dev'
       displayName: 'Deploy DEV web application'
       dependsOn: DBAVerificationApply
-      condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
+      #condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
           displayName: 'Deployment of Space Game web application'
