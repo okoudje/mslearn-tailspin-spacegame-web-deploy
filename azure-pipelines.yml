@@ -10,6 +10,7 @@ schedules:
       branches:
         include:
           - release-pipeline-jy
+          - database
       #always: false
   
 stages:
@@ -87,7 +88,7 @@ stages:
               displayName: 'Build database projets with @MsBuild'
               timeoutInMinutes: 120
               inputs:
-                  project: '**/*.sqlproj'
+                solution: '**/*.sqlproj'
                 
             # Copy Files to staging Directory
             - task: CopyFiles@2
