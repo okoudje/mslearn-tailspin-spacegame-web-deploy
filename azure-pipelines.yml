@@ -153,16 +153,47 @@ stages:
                      #deleteFirewallRule: true # Optional
 
                  - task: PowerShell@2
-                   displayName: 'Show Auto Generated SQl Script'
+                   displayName: 'Show Auto Generated SQl Script and check Database Schema changes'
                    inputs:
                      targetType: inline
                      script: |
+                       # Prnt schema change
                        Write-Host "Auto Generated SQ Update Script"
                        Get-Content d:\a\1\s\GeneratedOutputFiles\$(databasename)_Script.sql  | foreach { Write-Output $_}
+
+                       # Check for schema changes
+                       $file = Get-Content "d:\a\1\s\GeneratedOutputFiles\$(databasename)_Script.sql"
+                       $containsKeyWord = $file | %{$_ -match "CREATE" -or $_ -match "ALTER" -or $_ -match "DROP"}
+                       if ($containsWord -contains $true)
+                           {
+                           Install-Module VSTeam -Scope CurrentUser -Force
+                           Set-VSTeamAccount -Account $(Acct) -PersonnalAccessToken $(PAT)
+                           $methodParameters = @{
+                                          ProjectName = "$(System.TeamProject)"
+                                          Name = "Release" }
+                            $vg = Get-VSTeamVariableGroup @methodParameters
+                            $vars = @{}
+                            $vg.variables | Get-Member -MemberType *Property | %{$vars.($_.Name) = $vg.variables.($_.Name)}
+                            $varName = "schemaChanged"
+                            $vars.$varName = @{}
+                            $vars.$varName.isSecret = $false
+                            $methodParameters = @{
+                             id = $vg.id
+                             ProjectName = "$(System.TeamProject)"
+                             Name = "Release"
+                             Description = ""
+                             Type = "Vsts"
+                             Variables = $vars
+                            }
+                         Update-VSTeamVariableGroup @methodParameters
+                           }
              
     - stage: 'DBAVerificationApply'
       displayName: 'Apply script database schema '
+      variables:
+         - group: 'Release'
       dependsOn: DBAVerificationScript
+      condition: and(succeeded('DBAVerificationScript'),eq(variables['schemaChanged'],True))
       jobs:
       - deployment: DBAVerificationApply
         pool: 
@@ -205,12 +236,40 @@ stages:
                   #startIpAddress: # Required when ipDetectionMethod == IPAddressRange
                   #endIpAddress: # Required when ipDetectionMethod == IPAddressRange
                   #deleteFirewallRule: true # Optional
-            
 
+              - task: PowerShell@2
+                displayName: 'Remove "schemaChanged" pipeline variable'
+                inputs:
+                  targetType: 'inline'
+                  script: | 
+                   Install-Module VSTeam -Scope CurrentUser -Force
+                   Set-VSTeamAccount –Account $(Acct) -PersonalAccessToken $(PAT)
+                   $methodParameters = @{
+                     ProjectName = "$(System.TeamProject)"
+                     Name = "Release"}
+                   $vg = Get-VSTeamVariableGroup  @methodParameters 
+                   $vars = @{}
+                   $vg.variables | Get-Member -MemberType *Property | %{$vars.($_.Name) = $vg.variables.($_.Name)}
+                   $vars.Remove("schemaChanged")
+                   $methodParameters = @{
+                     id = $vg.id
+                     ProjectName = "$(System.TeamProject)"
+                     Name = "Release"
+                     Description = ""
+                     Type = "Vsts"
+                     Variables = $vars}
+                    Update-VSTeamVariableGroup @methodParameters
+            
     - stage: 'Dev'
       displayName: 'Deploy DEV web application'
-      dependsOn: DBAVerificationApply
-      #condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
+      dependsOn: 
+        - DBAVerificationScript
+        - DBAVerificationApply
+      condition: |
+          and(
+          succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
+          )
+      #   condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
           displayName: 'Deployment of Space Game web application'
