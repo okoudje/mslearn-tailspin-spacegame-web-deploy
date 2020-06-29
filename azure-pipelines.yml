@@ -164,7 +164,7 @@ stages:
                        # Check for schema changes
                        $file = Get-Content "d:\a\1\s\GeneratedOutputFiles\$(databasename)_Script.sql"
                        $containsKeyWord = $file | %{$_ -match "CREATE" -or $_ -match "ALTER" -or $_ -match "DROP"}
-                       if ($containsWord -contains $true)
+                       if ($containsKeyWord -contains $true)
                            {
                            Install-Module VSTeam -Scope CurrentUser -Force
                            Set-VSTeamAccount -Account $(Acct) -PersonnalAccessToken $(PAT)
