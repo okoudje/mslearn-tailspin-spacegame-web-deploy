@@ -167,7 +167,7 @@ stages:
                        if ($containsKeyWord -contains $true)
                            {
                            Install-Module VSTeam -Scope CurrentUser -Force
-                           Set-VSTeamAccount -Account $(Acct) -PersonnalAccessToken $(PAT)
+                           Set-VSTeamAccount -Account $(Acct) -PersonalAccessToken $(PAT)
                            $methodParameters = @{
                                           ProjectName = "$(System.TeamProject)"
                                           Name = "Release" }
