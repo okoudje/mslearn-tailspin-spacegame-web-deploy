@@ -176,6 +176,7 @@ stages:
                             $vg.variables | Get-Member -MemberType *Property | %{$vars.($_.Name) = $vg.variables.($_.Name)}
                             $varName = "schemaChanged"
                             $vars.$varName = @{}
+                            $vars.$varName.value = "True"
                             $vars.$varName.isSecret = $false
                             $methodParameters = @{
                              id = $vg.id
@@ -293,7 +294,7 @@ stages:
                      package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     - stage: 'ASM'
       displayName: 'Deploy ASM web application'
-      dependsOn: dev
+      dependsOn: Dev
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
@@ -319,7 +320,7 @@ stages:
      
     - stage: 'INT'
       displayName: 'Deploy INT web application'
-      dependsOn: asm
+      dependsOn: ASM
       # condition: and (succeeded() , eq(variables['Build.Reason'],'Schedule') )
       jobs:
       - deployment: DeployWeb
@@ -345,7 +346,7 @@ stages:
   
     - stage: 'UAT'
       displayName: 'Deploy UAT web application'
-      dependsOn: int
+      dependsOn: INT
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
       - deployment: DeployWeb
