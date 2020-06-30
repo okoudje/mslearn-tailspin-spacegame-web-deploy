@@ -210,7 +210,7 @@ stages:
                 artifact: dropDacpac
                 patterns: '**/*'
               - task: SqlAzureDacpacDeployment@1
-                displayName: 'Generate Schema Script'
+                displayName: 'Apply Schema Script'
                 inputs:
                   azureConnectionType: 'ConnectedServiceNameARM' # Optional. Options: connectedServiceName, connectedServiceNameARM
                   #azureClassicSubscription: # Required when azureConnectionType == ConnectedServiceName
