@@ -335,7 +335,7 @@ stages:
                displayName: 'Build the project - $(buildConfiguration)'
                inputs:
                  command: 'build'
-                 arguments: '--no-restore --configuration $(buildConfiguration)'
+                 arguments: '--configuration $(buildConfiguration)'
                  projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
              # Run test
              - task: DotNetCoreCLI@2
