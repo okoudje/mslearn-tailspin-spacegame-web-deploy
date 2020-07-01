@@ -330,6 +330,13 @@ stages:
                displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
                inputs:
                   version: '$(dotnetSdkVersion)'
+
+             # restore projects dependencies
+             - task: DotNetCoreCLI@2
+               displayName: 'Restore project dependencies'
+               inputs:
+                  command: 'restore'
+                  projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
              # Build test projects
              - task: DotNetCoreCLI@2
                displayName: 'Build the project - $(buildConfiguration)'
