@@ -11,7 +11,7 @@ schedules:
       branches:
         include:
           - release-pipeline-jy
-          - database
+          - database 
       #always: false
   
 stages:
