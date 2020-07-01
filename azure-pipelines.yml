@@ -3,6 +3,7 @@ trigger:
 
 variables:
   buildConfiguration: 'Release'
+  dotnetSdkVersion: '3.1.300'
 
 schedules:
     - cron: '0 3 * * *'
@@ -64,7 +65,7 @@ stages:
             displayName: 'Publish the project - $(buildConfiguration)'
             inputs:
                command: 'publish'
-               projects: '**/*.csproj'
+               projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.csproj' # '**/*.csproj'
                publishWebProjects: false
                arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
                zipAfterPublish: true
@@ -317,7 +318,34 @@ stages:
                     azureSubscription: 'Space-game-azurerm-connection'
                     appName: '$(webAppNameASM)'
                     package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
-     
+        
+        - job: RunUITests
+          dependsOn: DeployWeb
+          displayName: 'Run Ui Tests'
+          pool:
+            vmImage: 'windows-2019'
+          steps:
+             # Use Dotnet version
+             - task: UseDotNet@2
+               displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
+               inputs:
+                  version: '$(dotnetSdkVersion)'
+             # Build test projects
+             - task: DotNetCoreCLI@2
+               displayName: 'Build the project - $(buildConfiguration)'
+               inputs:
+                 command: 'build'
+                 arguments: '--no-restore --configuration $(buildConfiguration)'
+                 projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
+             # Run test
+             - task: DotNetCoreCLI@2
+               displayName: 'Build the project - $(buildConfiguration)'
+               inputs:
+                command: 'test'
+                arguments: ' --no-build --configuration $(buildConfiguration) ' #'--no-restore --configuration $(buildConfiguration)'
+                projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
+
+    
     - stage: 'INT'
       displayName: 'Deploy INT web application'
       dependsOn: ASM
