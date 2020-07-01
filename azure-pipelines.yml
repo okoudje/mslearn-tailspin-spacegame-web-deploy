@@ -335,20 +335,20 @@ stages:
 
              # restore projects dependencies
              - task: DotNetCoreCLI@2
-               displayName: 'Restore project dependencies'
+               displayName: 'Restore UI Tests project dependencies'
                inputs:
                   command: 'restore'
                   projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
              # Build test projects
              - task: DotNetCoreCLI@2
-               displayName: 'Build the project - $(buildConfiguration)'
+               displayName: 'Build UI Tests project - $(buildConfiguration)'
                inputs:
                  command: 'build'
                  arguments: '--configuration $(buildConfiguration)'
                  projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.UITests.csproj'
              # Run test
              - task: DotNetCoreCLI@2
-               displayName: 'Build the project - $(buildConfiguration)'
+               displayName: 'Run UI Tests  - $(buildConfiguration)'
                inputs:
                 command: 'test'
                 arguments: ' --no-build --configuration $(buildConfiguration) ' #'--no-restore --configuration $(buildConfiguration)'
