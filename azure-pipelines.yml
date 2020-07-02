@@ -321,8 +321,8 @@ stages:
         
         - job: RunUITests
           dependsOn: DeployWeb
-          # condition: eq(1,2)
-          continueOnError: True
+          condition: eq(1,2)
+           #continueOnError: False
           displayName: 'Run Ui Tests'
           pool:
             vmImage: 'windows-2019'
