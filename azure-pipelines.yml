@@ -321,6 +321,7 @@ stages:
         
         - job: RunUITests
           dependsOn: DeployWeb
+          condition: eq(1,2)
           displayName: 'Run Ui Tests'
           pool:
             vmImage: 'windows-2019'
