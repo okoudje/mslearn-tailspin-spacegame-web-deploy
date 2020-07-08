@@ -321,7 +321,7 @@ stages:
       dependsOn: 
         - DBAVerificationScript
         - DBAVerificationApply
-      # condition: |
+      # condition: | 
       #     and(
       #     succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
       #     )
