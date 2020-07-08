@@ -1,11 +1,11 @@
 terraform {
-  required_version = "> 0.12.0"
+  required_version = "> 0.12.6"
   
   backend "azurerm" {
     resource_group_name  = "tf-storage-rg"
     storage_account_name = "tfsa10547"
     container_name       = "tfstate"
-    key                  = "tf.terraform.tfstate"
+    key                  = "aa.terraform.tfstate"
   }
 }
 
@@ -58,22 +58,21 @@ resource "azurerm_app_service_plan" "spacegame" {
 }
 
 resource "azurerm_app_service" "spacegame" {
-for_each = 
-{
-  dev_app = "dev"
-  asm_app = "asm"
-  int_app = "int"
-  uat_app = "uat"
-}
-  name                = "${var.app_service_name_prefix}-${each.value}"
-  location            = azurerm_resource_group.spacegame.location
-  resource_group_name = azurerm_resource_group.spacegame.name
-  app_service_plan_id = azurerm_app_service_plan.spacegame.id
+   for_each =    {
+     dev_app = "dev"
+     asm_app = "asm"
+     int_app = "int"
+     uat_app = "uat"
+   }
+   name                = "${var.app_service_name_prefix}-${each.value}"
+   location            = azurerm_resource_group.spacegame.location
+   resource_group_name = azurerm_resource_group.spacegame.name
+   app_service_plan_id = azurerm_app_service_plan.spacegame.id
 
-  site_config {
-    linux_fx_version = "DOTNETCORE|3.1"
-    #app_command_line = "dotnet Tailspin.SpaceGame.Web.dll"
-  }
+#   site_config {
+#     linux_fx_version = "DOTNETCORE|3.1"
+#     #app_command_line = "dotnet Tailspin.SpaceGame.Web.dll"
+#   }
 
 }
 
