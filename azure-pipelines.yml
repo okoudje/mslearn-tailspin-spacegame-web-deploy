@@ -73,6 +73,7 @@ stages:
           - publish: '$(Build.ArtifactStagingDirectory)'
             artifact: drop
         - job: 'BuildDacPac'
+          condition: eq(1,2)
           pool: 
             vmImage: 'windows-2019'
           steps:
@@ -109,6 +110,7 @@ stages:
 
     - stage: 'DBAVerificationScript'
       displayName: 'script database schema changes'
+      condition: eq(1,2)
       dependsOn: Build
       jobs:
         - deployment: DBAVerificationScript
@@ -191,11 +193,11 @@ stages:
                            }
              
     - stage: 'DBAVerificationApply'
-      displayName: 'Apply script database schema '
+      displayName: 'Apply script database schema'      
       variables:
          - group: 'Release'
       dependsOn: DBAVerificationScript
-      condition: and(succeeded('DBAVerificationScript'),eq(variables['schemaChanged'],True))
+      condition: eq(1,2) #and(succeeded('DBAVerificationScript'),eq(variables['schemaChanged'],True))
       jobs:
       - deployment: DBAVerificationApply
         pool: 
@@ -261,16 +263,68 @@ stages:
                      Type = "Vsts"
                      Variables = $vars}
                     Update-VSTeamVariableGroup @methodParameters
-            
+    - stage: 'Provision'
+      displayName: 'Provisionning Stage '
+      dependsOn: Build      
+      variables: 
+        - group: Release
+      jobs: 
+        - job: Provisionning
+          displayName: 'Provisioning infra Job'  # friendly name to display in the UI'       
+          variables: 
+            - group: Release
+          pool:
+            vmImage: 'ubuntu-latest'
+          steps:
+            - script: |
+                # Exit when any commands returns a failure status
+                 set -e 
+
+                # create and write terraform.tvars  
+                 echo 'resource_group_location = "'$(ResourceGroupLocation)'"' | tee terraform.tfvars
+              
+                 # create and write backend.tfvars
+                 echo 'resource_group_name = "tf-storage-rg"' | tee backend.tfvars
+                 echo 'storage_account_name = "'$(StorageAccountName)'"' | tee -a backend.tfvars
+                 echo 'container_name = "tfstate"' | tee -a backend.tfvars
+                 echo 'key = "tf.terraform.tfstate"' | tee -a backend.tfvars
+
+                 # terraform init
+                   terraform init -input=false -backend-config="backend.tfvars"
+                
+                 # terraform apply with auto approve
+                   terraform apply -input=false -auto-approve
+
+                 # terraform retrieve output  and set pipeline variable
+                   WebAppNameDev=$(terraform output appservice_name_dev) 
+                   WebAppNameAsm=$(terraform output appservice_name_asm)
+                   WebAppNameInt=$(terraform output appservice_name_int)
+                   WebAppNameUat=$(terraform output appservice_name_uat)
+
+                 #  bash set variable
+                   echo "##vso[task.setvariable variable=WebAppNameDev;isOutput=true]$WebAppNameDev"
+                   echo "##vso[task.setvariable variable=WebAppNameAsm;isOutput=true]$WebAppNameAsm"
+                   echo "##vso[task.setvariable variable=WebAppNameInt;isOutput=true]$WebAppNameInt"
+                   echo "##vso[task.setvariable variable=WebAppNameUat;isOutput=true]$WebAppNameUat"
+              name: 'RunTerraform'
+              displayName: 'Run Terraform'
+              env:
+               ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+               ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+               ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+               ARM_TENANT_ID: $(ARM_TENANT_ID)
+    
+
     - stage: 'Dev'
       displayName: 'Deploy DEV web application'
+      condition: eq(1,2)
       dependsOn: 
         - DBAVerificationScript
         - DBAVerificationApply
-      condition: |
-          and(
-          succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
-          )
+      # condition: |
+      #     and(
+      #     succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
+      #     )
       #   condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
@@ -295,6 +349,7 @@ stages:
                      package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     - stage: 'ASM'
       displayName: 'Deploy ASM web application'
+      condition: eq(1,2)
       dependsOn: Dev
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
@@ -433,6 +488,7 @@ stages:
 
     - stage: 'UAT'
       displayName: 'Deploy UAT web application'
+      condition: eq(1,2)
       dependsOn: INT
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
