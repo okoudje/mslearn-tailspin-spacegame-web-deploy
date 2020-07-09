@@ -340,7 +340,7 @@ stages:
                  - download: current
                    artifact: drop
                  - task: AzureWebApp@1
-                   displayName: 'Azure App Service Deploy : WebSite' 
+                   displayName: 'Azure App Service Deploy : WebSite ' 
                    inputs:
                      appType: webAppLinux
                      azureSubscription: 'Space-game-azurerm-connection'
