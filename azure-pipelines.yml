@@ -330,7 +330,7 @@ stages:
           displayName: 'Deployment of Space Game web application'
           pool:
             vmImage: 'Ubuntu-18.04'
-          environment: 'dev'
+          environment: 'dev'          
           variables:            
              WebAppNameDev: $[stageDependencies.Provision.Provisionning.outputs['RunTerraform.WebAppNameDev']]
           strategy:
@@ -346,6 +346,8 @@ stages:
                      azureSubscription: 'Space-game-azurerm-connection'
                      appName: '$(WebAppNameDev)'
                      package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
+                   env:                   
+                    ASPNETCORE_ENVIRONMENT : 'Development'
     - stage: 'ASM'
       displayName: 'Deploy ASM web application'      
       dependsOn: 
@@ -373,6 +375,7 @@ stages:
                     azureSubscription: 'Space-game-azurerm-connection'
                     appName: '$(WebAppNameAsm)'
                     package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
+                  
         
         - job: RunUITests
           dependsOn: DeployWeb
