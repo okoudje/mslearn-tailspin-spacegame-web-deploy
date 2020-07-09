@@ -110,7 +110,7 @@ stages:
 
     - stage: 'DBAVerificationScript'
       displayName: 'script database schema changes'
-      condition: eq(1,2)
+      #condition: eq(1,2)
       dependsOn: Build
       jobs:
         - deployment: DBAVerificationScript
@@ -197,7 +197,7 @@ stages:
       variables:
          - group: 'Release'
       dependsOn: DBAVerificationScript
-      condition: eq(1,2) #and(succeeded('DBAVerificationScript'),eq(variables['schemaChanged'],True))
+      condition: and(succeeded('DBAVerificationScript'),eq(variables['schemaChanged'],True))
       jobs:
       - deployment: DBAVerificationApply
         pool: 
@@ -316,16 +316,16 @@ stages:
     
 
     - stage: 'Dev'
-      displayName: 'Deploy DEV web application'
-      condition: eq(1,2)
+      displayName: 'Deploy DEV web application'      
       dependsOn: 
         - DBAVerificationScript
         - DBAVerificationApply
-      # condition: | 
-      #     and(
-      #     succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
-      #     )
-      #   condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
+        - Provision
+      condition: | 
+          and(
+          succeeded('DBAVerificationScript') , in(dependencies.DBAVerificationApply.result,'Succeeded','Skipped')
+          )
+       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
           displayName: 'Deployment of Space Game web application'
@@ -345,11 +345,10 @@ stages:
                    inputs:
                      appType: webAppLinux
                      azureSubscription: 'Space-game-azurerm-connection'
-                     appName: '$(webAppNameDEV)'
+                     appName: '$(WebAppNameDev)'
                      package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     - stage: 'ASM'
-      displayName: 'Deploy ASM web application'
-      condition: eq(1,2)
+      displayName: 'Deploy ASM web application'      
       dependsOn: Dev
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
@@ -371,7 +370,7 @@ stages:
                   inputs:
                     appType: webAppLinux
                     azureSubscription: 'Space-game-azurerm-connection'
-                    appName: '$(webAppNameASM)'
+                    appName: '$(WebAppNameASM)'
                     package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
         
         - job: RunUITests
@@ -487,8 +486,7 @@ stages:
                   #applicationInsightsWebTestName: # Optional
 
     - stage: 'UAT'
-      displayName: 'Deploy UAT web application'
-      condition: eq(1,2)
+      displayName: 'Deploy UAT web application'      
       dependsOn: INT
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
@@ -510,6 +508,6 @@ stages:
                 inputs:
                   appType: webAppLinux
                   azureSubscription: 'Space-game-azurerm-connection'
-                  appName: '$(webAppNameUAT)'
+                  appName: '$(WebAppNameUAT)'
                   package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
   
