@@ -348,7 +348,9 @@ stages:
                      package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
     - stage: 'ASM'
       displayName: 'Deploy ASM web application'      
-      dependsOn: Dev
+      dependsOn: 
+         - Dev
+         - Provision
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
         - deployment: DeployWeb
