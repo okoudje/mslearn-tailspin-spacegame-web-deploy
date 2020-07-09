@@ -369,7 +369,7 @@ stages:
                   inputs:
                     appType: webAppLinux
                     azureSubscription: 'Space-game-azurerm-connection'
-                    appName: '$(WebAppNameASM)'
+                    appName: '$(WebAppNameAsm)'
                     package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
         
         - job: RunUITests
