@@ -331,8 +331,8 @@ stages:
           pool:
             vmImage: 'Ubuntu-18.04'
           environment: 'dev'
-          variables:
-            - group : Release
+          variables:            
+             WebAppNameDev: $[stageDependencies.Provision.Provisionning.outputs['RunTerraform.WebAppNameDev']]
           strategy:
            runOnce:
              deploy:
@@ -357,7 +357,7 @@ stages:
             vmImage: 'Ubuntu-18.04'
           environment: 'asm'
           variables:
-            - group : Release
+            WebAppNameAsm: $[stageDependencies.Provision.Provisionning.outputs['RunTerraform.WebAppNameAsm']]
           strategy:
            runOnce:
             deploy:
@@ -412,7 +412,7 @@ stages:
         - job: RunloadTests  # name of the job (A-Z, a-z, 0-9, and underscore)
           displayName: 'Run Jmeter Load Tests'  # friendly name to display in the UI
           dependsOn: DeployWeb
-          # condition: eq(1,1)         
+          condition: eq(1,1)         
           continueOnError: False  # 'true' if future jobs should run even if this job fails; defaults to 'false'
           pool: 
             vmImage: 'ubuntu-18.04'                          
@@ -438,6 +438,7 @@ stages:
     - stage: 'INT'
       displayName: 'Deploy INT web application'
       dependsOn: ASM
+      condition: eq(1,2)
       # condition: and (succeeded() , eq(variables['Build.Reason'],'Schedule') )
       jobs:
       - deployment: DeployWeb
@@ -446,7 +447,7 @@ stages:
           vmImage: 'Ubuntu-18.04'
         environment: 'int'
         variables:
-          - group : Release
+          WebAppNameInt: $[stageDependencies.Provision.Provisionning.outputs['RunTerraform.WebAppNameInt']]
         strategy:
           runOnce:
            deploy:
@@ -458,7 +459,7 @@ stages:
                 inputs:
                   appType: webAppLinux
                   azureSubscription: 'Space-game-azurerm-connection'
-                  appName: '$(webAppNameINT)'
+                  appName: '$(WebAppNameInt)'
                   package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
                   deployToSlotOrASE: true
                   resourceGroupName: 'space-game-rg'
@@ -470,7 +471,7 @@ stages:
                   # Start, stop, restart, slot swap, slot delete, install site extensions or enable continuous monitoring for an Azure App Service
                   azureSubscription: 'Space-game-azurerm-connection'
                   action: 'Swap Slots' # Optional. Options: swap Slots, start Azure App Service, stop Azure App Service, restart Azure App Service, delete Slot, install Extensions, enable Continuous Monitoring, start All Continuous Webjobs, stop All Continuous Webjobs
-                  webAppName: '$(webAppNameINT)'
+                  webAppName: '$(WebAppNameInt)'
                   #specifySlotOrASE: false # Optional
                   resourceGroupName: 'space-game-rg' # Required when action == Swap Slots || Action == Delete Slot || SpecifySlot == True
                   sourceSlot: 'swap' # Required when action == Swap Slots
@@ -487,6 +488,7 @@ stages:
     - stage: 'UAT'
       displayName: 'Deploy UAT web application'      
       dependsOn: INT
+      condition: eq(1,2)
       # condition: and (succeeded() , eq(variables['Build.SourceBranchName'],variables['releaseBranchName']) )
       jobs:
       - deployment: DeployWeb
@@ -495,7 +497,7 @@ stages:
           vmImage: 'Ubuntu-18.04'
         environment: 'uat'
         variables:
-          - group : Release
+          WebAppNameUat: $[stageDependencies.Provision.Provisionning.outputs['RunTerraform.WebAppNameUat']]
         strategy:
           runOnce:
            deploy:
@@ -507,6 +509,6 @@ stages:
                 inputs:
                   appType: webAppLinux
                   azureSubscription: 'Space-game-azurerm-connection'
-                  appName: '$(WebAppNameUAT)'
+                  appName: '$(WebAppNameUat)'
                   package: '$(Pipeline.Workspace)/drop/$(buildconfiguration)/*.zip'
   
