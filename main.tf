@@ -114,3 +114,4 @@ output "website_hostname_uat" {
   value       = azurerm_app_service.spacegame["uat_app"].default_site_hostname
   description = "The hostname of the website in the uat environment"
 }
+
